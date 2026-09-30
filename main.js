@@ -8,6 +8,15 @@ const shellsByOS = {
 }
 const shellNames = { bash: 'Bash', fish: 'fish', zsh: 'Zsh', powershell: 'PowerShell', cmd: 'Windows Command Prompt', 'git-bash': 'Git Bash' }
 
+const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+function updateTheme() {
+  const theme = $('#themeSelect').value
+  document.documentElement.dataset.theme = theme === 'system' ? (systemTheme.matches ? 'dark' : 'light') : theme
+}
+$('#themeSelect').addEventListener('change', updateTheme)
+systemTheme.addEventListener('change', updateTheme)
+updateTheme()
+
 const severityRank = { critical: 0, high: 1, medium: 2, low: 3 }
 let rows = []
 let filtered = []
