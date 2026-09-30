@@ -1,0 +1,49 @@
+name: Shell commands
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [bash, fish, zsh, powershell]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install fish and Zsh
+        if: matrix.shell == 'fish' || matrix.shell == 'zsh'
+        run: sudo apt-get update && sudo apt-get install -y ${{ matrix.shell }}
+      - name: Validate generated command
+        run: node tests/shells.cjs ${{ matrix.shell }}
+      - name: Validate legacy PowerShell argument handling
+        if: matrix.shell == 'powershell'
+        env:
+          PS_LEGACY: '1'
+        run: node tests/shells.cjs powershell
+
+  windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [windows-powershell, powershell, cmd, git-bash]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build test adapter and validate generated command
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%I in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do call "%%I\VC\Auxiliary\Build\vcvars64.bat"
+          node tests/shells.cjs ${{ matrix.shell }}
