@@ -234,7 +234,6 @@ function render() {
 
 function renderAlerts() {
   elements.body.innerHTML = filtered.map(row => {
-    const advisory = [row.ghsa, row.cve].filter(Boolean).join(' · ')
     const fix = row.patched_version
       ? `<span class="fix">${escapeHtml(row.patched_version)}</span>`
       : '<span class="no-fix">no fix</span>'
@@ -242,18 +241,25 @@ function renderAlerts() {
       ? `<a href="${escapeHtml(row.html_url)}" target="_blank" rel="noopener">#${escapeHtml(row.alert_number || '↗')}</a>`
       : '-'
     const advisoryLink = row.ghsa
-      ? `<a href="https://github.com/advisories/${encodeURIComponent(row.ghsa)}" target="_blank" rel="noopener">${escapeHtml(advisory)}</a>`
-      : escapeHtml(advisory || '-')
+      ? `<a href="https://github.com/advisories/${encodeURIComponent(row.ghsa)}" target="_blank" rel="noopener">${escapeHtml(row.ghsa)}</a>`
+      : ''
 
     return `<tr>
       <td><span class="badge ${escapeHtml(row.severity)}">${escapeHtml(row.severity || '-')}</span></td>
       <td><span class="repo">${escapeHtml(row.repository)}</span><div class="tiny">${escapeHtml(row.manifest_path || '')}</div></td>
-      <td><span class="pkg">${escapeHtml(row.package)}</span><div class="tiny">${escapeHtml(row.ecosystem || '')}</div></td>
-      <td>${advisoryLink}</td>
-      <td><span class="tiny">${escapeHtml(row.vulnerable_range || '-')}</span></td>
-      <td>${fix}</td>
-      <td><span class="tiny">${escapeHtml([row.scope, row.relationship].filter(Boolean).join(' · ') || '-')}</span></td>
-      <td><div class="summary">${escapeHtml(row.summary || '-')}</div></td>
+      <td>
+        <span class="pkg">${escapeHtml(row.package)}</span>
+        <div class="tiny">${escapeHtml([row.ecosystem, row.scope].filter(Boolean).join(' · '))}</div>
+        <div class="tiny">${row.relationship ? `${escapeHtml(row.relationship)} dependency` : ''}</div>
+      </td>
+      <td>
+        <div class="summary">${escapeHtml(row.summary || '-')}</div>
+        <div class="advisory-ids">${advisoryLink}<span>${escapeHtml(row.cve || '')}</span></div>
+      </td>
+      <td>
+        <div><span class="tiny">Affected:</span> <span class="version">${escapeHtml(row.vulnerable_range || '-')}</span></div>
+        <div><span class="tiny">Fixed:</span> ${fix}</div>
+      </td>
       <td>${alertLink}</td>
     </tr>`
   }).join('')
@@ -411,6 +417,7 @@ for (const tab of $$('.tab')) {
     const activeTab = tab.dataset.tab
     elements.alertsView.hidden = activeTab !== 'alerts'
     elements.advisoriesView.hidden = activeTab !== 'advisories'
+    $('#columnMenu').hidden = activeTab !== 'alerts'
   })
 }
 
@@ -453,17 +460,24 @@ updateShells()
 const tableColumns = [...$('#alertsTable').querySelectorAll('th')].map((header, index) => ({
   header,
   label: header.textContent,
-  width: [100, 200, 160, 220, 140, 110, 140, 360, 80][index],
+  width: [96, 200, 190, 420, 160, 72][index],
   visible: true
 }))
 
+let resizingColumn = null
+
 function updateColumns() {
-  $('#alertsTable').style.width = `${tableColumns.reduce((total, column) => total + (column.visible ? column.width : 0), 0)}px`
+  const visibleColumns = tableColumns.filter(column => column.visible)
+  const totalWidth = visibleColumns.reduce((total, column) => total + column.width, 0)
+  const extraWidth = Math.max(0, $('.table-wrap').clientWidth - totalWidth)
+  const flexibleColumn = visibleColumns.find(column => column.label === 'Advisory' && column !== resizingColumn) || visibleColumns.find(column => column !== resizingColumn) || visibleColumns[0]
+  $('#alertsTable').style.width = `${totalWidth + extraWidth}px`
   tableColumns.forEach((column, index) => {
     column.col.hidden = !column.visible
-    column.col.style.width = `${column.width}px`
+    column.renderedWidth = column.width + (column === flexibleColumn ? extraWidth : 0)
+    column.col.style.width = `${column.renderedWidth}px`
     column.header.hidden = !column.visible
-    column.handle.setAttribute('aria-valuenow', column.width)
+    column.handle.setAttribute('aria-valuenow', column.renderedWidth)
     column.checkbox.disabled = column.visible && tableColumns.filter(item => item.visible).length === 1
     for (const row of elements.body.rows) row.cells[index].hidden = !column.visible
   })
@@ -490,16 +504,21 @@ for (const column of tableColumns) {
   column.handle.setAttribute('aria-orientation', 'vertical')
   column.handle.setAttribute('aria-label', `Resize ${column.label} column`)
   column.handle.setAttribute('aria-valuemin', '64')
-  column.handle.setAttribute('aria-valuemax', '800')
+  column.handle.setAttribute('aria-valuemax', '4000')
   column.header.append(column.handle)
+  const startResize = () => {
+    for (const item of tableColumns) if (item.visible) item.width = item.renderedWidth
+    resizingColumn = column
+  }
   const resize = width => {
-    column.width = Math.max(64, Math.min(800, width))
+    column.width = Math.max(64, Math.min(4000, width))
     updateColumns()
   }
   column.handle.addEventListener('keydown', event => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
     event.preventDefault()
-    resize(event.key === 'Home' ? 64 : event.key === 'End' ? 800 : column.width + (event.key === 'ArrowRight' ? 16 : -16))
+    startResize()
+    resize(event.key === 'Home' ? 64 : event.key === 'End' ? 4000 : column.width + (event.key === 'ArrowRight' ? 16 : -16))
   })
   let drag = null
   column.handle.addEventListener('pointerdown', event => {
@@ -507,6 +526,7 @@ for (const column of tableColumns) {
     event.preventDefault()
     column.handle.focus()
     column.handle.setPointerCapture(event.pointerId)
+    startResize()
     drag = { x: event.clientX, width: column.width }
   })
   column.handle.addEventListener('pointermove', event => {
@@ -515,3 +535,5 @@ for (const column of tableColumns) {
   column.handle.addEventListener('lostpointercapture', () => { drag = null })
 }
 updateColumns()
+
+new ResizeObserver(updateColumns).observe($('.table-wrap'))
