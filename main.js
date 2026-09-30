@@ -1,6 +1,13 @@
 const $ = selector => document.querySelector(selector)
 const $$ = selector => [...document.querySelectorAll(selector)]
 
+const shellsByOS = {
+  linux: ['bash', 'fish', 'zsh', 'powershell'],
+  macos: ['zsh', 'bash', 'fish', 'powershell'],
+  windows: ['powershell', 'cmd', 'git-bash']
+}
+const shellNames = { bash: 'Bash', fish: 'fish', zsh: 'Zsh', powershell: 'PowerShell', cmd: 'Windows Command Prompt', 'git-bash': 'Git Bash' }
+
 const severityRank = { critical: 0, high: 1, medium: 2, low: 3 }
 let rows = []
 let filtered = []
@@ -9,6 +16,7 @@ let loadedOwnerHint = ''
 const elements = {
   owner: $('#ownerInput'),
   ownerStatus: $('#ownerStatus'),
+  os: $('#osSelect'),
   shell: $('#shellSelect'),
   shellHint: $('#shellHint'),
   command: $('#command'),
@@ -53,6 +61,13 @@ function isValidOwner(owner) {
 
 function safeSlug(value) {
   return (value || 'github').replace(/[^A-Za-z0-9._-]+/g, '-')
+}
+
+function updateShells() {
+  elements.shell.innerHTML = shellsByOS[elements.os.value]
+    .map(shell => `<option value="${shell}">${shellNames[shell]}</option>`)
+    .join('')
+  updateOwner()
 }
 
 function updateOwner() {
@@ -349,6 +364,7 @@ function loadDemo() {
 }
 
 elements.owner.addEventListener('input', updateOwner)
+elements.os.addEventListener('change', updateShells)
 elements.shell.addEventListener('change', updateOwner)
 $('#fileInput').addEventListener('change', event => handleFile(event.target.files[0]))
 
@@ -418,4 +434,4 @@ elements.reset.addEventListener('click', () => {
 elements.export.addEventListener('click', exportCsv)
 $('#demoBtn').addEventListener('click', loadDemo)
 
-updateOwner()
+updateShells()

@@ -161,6 +161,9 @@ p { margin: 0; }
 .owner-status.bad { color: var(--critical); }
 .owner-status.good { color: var(--low); }
 
+.command-selectors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.command-selectors label { display: grid; align-content: start; gap: 6px; }
+
 .code-wrap { position: relative; margin-top: 12px; }
 pre {
   margin: 0;

@@ -56,15 +56,25 @@
             </div>
           </div>
 
-          <label for="shellSelect">Shell</label>
-          <select class="control" id="shellSelect">
-            <option value="bash">Bash</option>
-            <option value="fish">fish</option>
-            <option value="zsh">Zsh</option>
-            <option value="powershell">PowerShell</option>
-            <option value="cmd">Windows Command Prompt</option>
-            <option value="git-bash">Git Bash</option>
-          </select>
+          <div class="command-selectors">
+            <label for="osSelect">
+              Operating system
+              <select class="control" id="osSelect">
+                <option value="linux">Linux</option>
+                <option value="macos">macOS</option>
+                <option value="windows">Windows</option>
+              </select>
+            </label>
+            <label for="shellSelect">
+              Shell
+              <select class="control" id="shellSelect">
+                <option value="bash">Bash</option>
+                <option value="fish">fish</option>
+                <option value="zsh">Zsh</option>
+                <option value="powershell">PowerShell</option>
+              </select>
+            </label>
+          </div>
 
           <p id="shellHint" hidden>Save the command as a .cmd file, then run it in Command Prompt.</p>
 
