@@ -6,6 +6,7 @@ function alertQuery(repository) {
 
 function makeCommand(owner, shell = 'bash') {
   if (shell === 'fish') return makeFishCommand(owner)
+  if (shell !== 'bash' && shell !== 'zsh') throw new Error('Unsupported shell')
   const output = `dependabot-alerts-${owner}.tsv`
 
   return `OWNER='${owner}'
