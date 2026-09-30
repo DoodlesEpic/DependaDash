@@ -18,6 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # Preserve the annotated tag instead of fetching the event commit into its ref.
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Validate version tag
