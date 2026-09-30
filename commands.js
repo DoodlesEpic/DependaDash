@@ -8,8 +8,9 @@ function makeCommand(owner, shell = 'bash') {
   if (shell === 'cmd') return makeCmdCommand(owner)
   if (shell === 'powershell') return makePowerShellCommand(owner)
   if (shell === 'fish') return makeFishCommand(owner)
-  if (shell !== 'bash' && shell !== 'zsh') throw new Error('Unsupported shell')
+  if (!['bash', 'zsh', 'git-bash'].includes(shell)) throw new Error('Unsupported shell')
   const output = `dependabot-alerts-${owner}.tsv`
+  const ghApi = shell === 'git-bash' ? 'MSYS_NO_PATHCONV=1 gh api' : 'gh api'
 
   return `OWNER='${owner}'
 OUT='${output}'
@@ -22,7 +23,7 @@ OUT='${output}'
   while IFS= read -r repo; do
     echo "Reading $repo..." >&2
 
-    gh api --paginate \\
+    ${ghApi} --paginate \\
       -H "Accept: application/vnd.github+json" \\
       -H "X-GitHub-Api-Version: 2022-11-28" \\
       "/repos/$repo/dependabot/alerts?state=open&per_page=100" \\
