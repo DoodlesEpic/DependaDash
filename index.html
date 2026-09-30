@@ -56,6 +56,11 @@
             </div>
           </div>
 
+          <label for="shellSelect">Shell</label>
+          <select class="control" id="shellSelect">
+            <option value="bash">Bash</option>
+          </select>
+
           <div class="code-wrap">
             <pre id="command"><code># Enter a GitHub owner above.</code></pre>
             <button class="btn copy-button" id="copyBtn" type="button" disabled>Copy</button>
@@ -185,6 +190,7 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="commands.js" defer></script>
   <script src="main.js" defer></script>
 </body>
 </html>
