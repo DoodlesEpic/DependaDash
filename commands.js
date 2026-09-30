@@ -5,6 +5,7 @@ function alertQuery(repository) {
 }
 
 function makeCommand(owner, shell = 'bash') {
+  if (shell === 'powershell') return makePowerShellCommand(owner)
   if (shell === 'fish') return makeFishCommand(owner)
   if (shell !== 'bash' && shell !== 'zsh') throw new Error('Unsupported shell')
   const output = `dependabot-alerts-${owner}.tsv`
@@ -50,4 +51,38 @@ begin
 end > "$out"
 
 echo "Created $out"`
+}
+
+function makePowerShellCommand(owner) {
+  return `$owner = '${owner}'
+$out = Join-Path (Get-Location) 'dependabot-alerts-${owner}.tsv'
+$utf8 = New-Object System.Text.UTF8Encoding($false)
+$previousEncoding = [Console]::OutputEncoding
+$writer = New-Object System.IO.StreamWriter($out, $false, $utf8)
+
+try {
+  [Console]::OutputEncoding = $utf8
+  $writer.WriteLine('${alertHeader}')
+  $repos = gh repo list $owner --limit 10000 --json nameWithOwner --jq '.[].nameWithOwner'
+  if ($LASTEXITCODE -ne 0) { throw 'Cannot list repositories.' }
+
+  foreach ($repo in $repos) {
+    [Console]::Error.WriteLine("Reading $repo...")
+    $query = '${alertQuery('REPOSITORY')}'.Replace('REPOSITORY', $repo)
+    if ($PSVersionTable.PSVersion -lt [version]'7.3' -or $PSNativeCommandArgumentPassing -eq 'Legacy') {
+      $query = $query.Replace('"', '\\"')
+    }
+    $alerts = gh api --paginate -H 'Accept: application/vnd.github+json' -H 'X-GitHub-Api-Version: 2022-11-28' "/repos/$repo/dependabot/alerts?state=open&per_page=100" --jq $query 2>$null
+    if ($LASTEXITCODE -eq 0) {
+      foreach ($alert in $alerts) { $writer.WriteLine($alert) }
+    } else {
+      [Console]::Error.WriteLine("Cannot read alerts for $repo. Skipping.")
+    }
+  }
+} finally {
+  $writer.Dispose()
+  [Console]::OutputEncoding = $previousEncoding
+}
+
+Write-Output "Created dependabot-alerts-${owner}.tsv"`
 }
