@@ -1,0 +1,35 @@
+name: Release version
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check that the pull request prepares a new version
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node <<'NODE'
+          const assert = require('node:assert/strict')
+          const fs = require('node:fs')
+          const { execFileSync } = require('node:child_process')
+          const pattern = /<span class="version" aria-label="Version">(v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))<\/span>/
+          const current = fs.readFileSync('index.html', 'utf8').match(pattern)?.[1]
+          const base = execFileSync('git', ['show', `${process.env.BASE_SHA}:index.html`], { encoding: 'utf8' }).match(pattern)?.[1]
+          const previous = base || execFileSync('git', ['describe', '--tags', '--abbrev=0', process.env.BASE_SHA], { encoding: 'utf8' }).trim()
+          assert.ok(current, 'The interface must show a version in vMAJOR.MINOR.PATCH format')
+          const nextParts = current.slice(1).split('.').map(BigInt)
+          const previousParts = previous.slice(1).split('.').map(BigInt)
+          const changed = nextParts.findIndex((part, index) => part !== previousParts[index])
+          assert.ok(changed !== -1 && nextParts[changed] > previousParts[changed], 'Every merge to main must prepare a newer release version')
+          NODE
