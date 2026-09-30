@@ -127,35 +127,37 @@
     </section>
 
     <main class="dashboard" id="dashboard">
-      <div class="identity">
-        <span>Loaded owner: <strong id="loadedOwner">-</strong></span>
-        <span class="muted" id="loadedRepos">0 affected repositories</span>
-      </div>
-
-      <section class="grid cards" aria-label="Alert summary">
-        <div class="panel card">
-          <div class="value" id="totalCount">0</div>
-          <div class="label">Open alerts</div>
+      <section class="dashboard-summary" aria-label="Dashboard summary">
+        <div class="identity">
+          <span>Loaded owner: <strong id="loadedOwner">-</strong></span>
+          <span class="muted" id="loadedRepos">0 affected repositories</span>
         </div>
-        <div class="panel card critical">
-          <div class="value" id="criticalCount">0</div>
-          <div class="label">Critical</div>
-        </div>
-        <div class="panel card high">
-          <div class="value" id="highCount">0</div>
-          <div class="label">High</div>
-        </div>
-        <div class="panel card medium">
-          <div class="value" id="mediumCount">0</div>
-          <div class="label">Medium</div>
-        </div>
-        <div class="panel card low">
-          <div class="value" id="lowCount">0</div>
-          <div class="label">Low</div>
-        </div>
+        <dl class="stats" aria-label="Alert counts">
+          <div><dt>Open alerts</dt><dd id="totalCount">0</dd></div>
+          <div class="critical"><dt>Critical</dt><dd id="criticalCount">0</dd></div>
+          <div class="high"><dt>High</dt><dd id="highCount">0</dd></div>
+          <div class="medium"><dt>Medium</dt><dd id="mediumCount">0</dd></div>
+          <div class="low"><dt>Low</dt><dd id="lowCount">0</dd></div>
+        </dl>
       </section>
 
-      <section class="panel">
+      <section class="panel results-panel">
+        <div class="results-header">
+          <div class="tabs" role="tablist" aria-label="Group alerts">
+            <button class="tab active" data-tab="alerts" type="button" role="tab" aria-selected="true">Alerts</button>
+            <button class="tab" data-tab="advisories" type="button" role="tab" aria-selected="false">Group by advisory</button>
+          </div>
+          <div class="result-actions">
+            <details class="column-menu" id="columnMenu">
+              <summary class="btn">Columns</summary>
+              <fieldset id="columnOptions">
+                <legend>Visible columns</legend>
+                <p class="column-help">Drag column edges to resize, or focus an edge and use the arrow keys.</p>
+              </fieldset>
+            </details>
+            <button class="btn" id="exportBtn" type="button">Export CSV</button>
+          </div>
+        </div>
         <div class="toolbar">
           <input class="control search" id="search" placeholder="Search repository, package, GHSA, CVE..." aria-label="Search alerts">
           <select class="control" id="severityFilter" aria-label="Filter by severity">
@@ -167,22 +169,9 @@
           <select class="control" id="ecosystemFilter" aria-label="Filter by ecosystem">
             <option value="">All ecosystems</option>
           </select>
-          <button class="btn" id="exportBtn" type="button">Export CSV</button>
-        </div>
-
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-tab="alerts" type="button" role="tab" aria-selected="true">Alerts</button>
-          <button class="tab" data-tab="advisories" type="button" role="tab" aria-selected="false">Group by advisory</button>
         </div>
 
         <div id="alertsView">
-          <div class="table-options">
-            <details class="column-menu">
-              <summary class="btn">Columns</summary>
-              <fieldset id="columnOptions"><legend>Visible columns</legend></fieldset>
-            </details>
-            <span class="muted">Drag column edges to resize, or focus an edge and use the arrow keys.</span>
-          </div>
           <div class="table-wrap" tabindex="0" role="region" aria-label="Alerts table, scroll to see all columns">
             <table id="alertsTable">
               <colgroup id="alertColumns"></colgroup>
@@ -192,10 +181,7 @@
                   <th>Repository</th>
                   <th>Package</th>
                   <th>Advisory</th>
-                  <th>Vulnerable</th>
-                  <th>Fix</th>
-                  <th>Scope</th>
-                  <th>Summary</th>
+                  <th>Versions</th>
                   <th>Alert</th>
                 </tr>
               </thead>
@@ -217,9 +203,10 @@
       </section>
     </main>
 
-    <div class="notice footer-note">
-      <strong>How it works:</strong> browsers cannot execute <code>gh</code> directly. DependaDash generates the collection command and then visualizes the TSV it produces.
-    </div>
+    <details class="footer-note">
+      <summary>How DependaDash works</summary>
+      <p>Browsers cannot execute <code>gh</code> directly. DependaDash generates the collection command and then visualizes the TSV it produces.</p>
+    </details>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
