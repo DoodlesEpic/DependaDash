@@ -1,6 +1,6 @@
 # DependaDash
 
-![DependaDash screenshot](assets/screenshot.png)
+<img width="1244" height="1613" alt="DependaDash screenshot" src="https://github.com/user-attachments/assets/29f49d78-d09b-4b0e-aecc-0f43bbda1fc5" />
 
 This is a small self-contained dashboard that can be used to view all of your GitHub Dependabot alerts together across repositories owned by your user account or an organization you belong to. 
 
@@ -28,5 +28,5 @@ Meanwhile, *this `README.md` file you're reading is completely human-written*, w
 
 ## License
 
-DependaDash is licensed under the GNU Affero General Public License, v3-or-later version. See the `LICENSE` file for more information.
+DependaDash is licensed under the GNU Affero General Public License v3-or-later. See the `LICENSE` file for more information.
 
