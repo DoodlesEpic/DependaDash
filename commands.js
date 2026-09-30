@@ -23,11 +23,15 @@ OUT='${output}'
   while IFS= read -r repo; do
     echo "Reading $repo..." >&2
 
-    ${ghApi} --paginate \\
+    if alerts=$(${ghApi} --paginate \\
       -H "Accept: application/vnd.github+json" \\
       -H "X-GitHub-Api-Version: 2022-11-28" \\
       "/repos/$repo/dependabot/alerts?state=open&per_page=100" \\
-      --jq "${alertQuery('$repo').replace(/"/g, '\\"')}" 2>/dev/null || echo "Cannot read alerts for $repo. Skipping." >&2
+      --jq "${alertQuery('$repo').replace(/"/g, '\\"')}" 2>/dev/null); then
+      if [ -n "$alerts" ]; then printf '%s\\n' "$alerts"; fi
+    else
+      echo "Cannot read alerts for $repo. Skipping." >&2
+    fi
   done
 } > "$OUT"
 
@@ -43,12 +47,17 @@ begin
 
   for repo in (gh repo list "$owner" --limit 10000 --json nameWithOwner --jq '.[].nameWithOwner')
     echo "Reading $repo..." >&2
-    gh api --paginate \\
+    if set -l alerts (gh api --paginate \\
       -H "Accept: application/vnd.github+json" \\
       -H "X-GitHub-Api-Version: 2022-11-28" \\
       "/repos/$repo/dependabot/alerts?state=open&per_page=100" \\
-      --jq "${alertQuery('$repo').replace(/"/g, '\\"')}" 2>/dev/null
-    or echo "Cannot read alerts for $repo. Skipping." >&2
+      --jq "${alertQuery('$repo').replace(/"/g, '\\"')}" 2>/dev/null)
+      if test (count $alerts) -gt 0
+        printf '%s\\n' $alerts
+      end
+    else
+      echo "Cannot read alerts for $repo. Skipping." >&2
+    end
   end
 end > "$out"
 
@@ -94,13 +103,20 @@ function makeCmdCommand(owner) {
 setlocal
 set "OWNER=${owner}"
 set "OUT=dependabot-alerts-${owner}.tsv"
+set "PART=%TEMP%\\dependadash-%RANDOM%-%RANDOM%.tmp"
 
 > "%OUT%" echo ${alertHeader}
 for /f "delims=" %%R in ('gh repo list "%OWNER%" --limit 10000 --json nameWithOwner --jq ".[].nameWithOwner"') do (
   echo Reading %%R... 1>&2
-  gh api --paginate -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/%%R/dependabot/alerts?state=open&per_page=100" --jq "${alertQuery('%%R').replace(/"/g, '\\"')}" >> "%OUT%" 2>nul || echo Cannot read alerts for %%R. Skipping. 1>&2
+  gh api --paginate -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/%%R/dependabot/alerts?state=open&per_page=100" --jq "${alertQuery('%%R').replace(/"/g, '\\"')}" > "%PART%" 2>nul
+  if errorlevel 1 (
+    echo Cannot read alerts for %%R. Skipping. 1>&2
+  ) else (
+    type "%PART%" >> "%OUT%"
+  )
 )
 
+del "%PART%" >nul 2>&1
 echo Created %OUT%
 endlocal`
 }

@@ -57,6 +57,9 @@ const server = http.createServer((req, res) => {
     assert.equal(req.headers['x-github-api-version'], '2022-11-28')
     res.setHeader('Link', `<http://127.0.0.1:${server.address().port}${req.url}&page=2>; rel="next"`)
     res.end(JSON.stringify([fixture]))
+  } else if (scenario === 'page-error' && req.url.includes('/first/')) {
+    res.statusCode = 403
+    res.end('{"message":"Forbidden on the second page"}')
   } else if (req.url.includes('/first/')) {
     res.end(JSON.stringify([{ ...fixture, number: 43 }]))
   } else if (req.url.includes('/last/')) {
@@ -90,7 +93,7 @@ async function main() {
     server.once('error', reject)
     server.listen(0, '127.0.0.1', resolve)
   })
-  for (scenario of ['alerts', 'empty', 'no-alerts']) {
+  for (scenario of ['alerts', 'empty', 'no-alerts', 'page-error']) {
     requests = []
     const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'dependadash space-'))
     try {
@@ -112,10 +115,12 @@ async function main() {
       }
       assert.equal(result.code, 0, result.stderr)
       const output = fs.readFileSync(path.join(cwd, 'dependabot-alerts-acme.tsv'), 'utf8').replace(/\r\n/g, '\n')
-      const expected = scenario !== 'alerts' ? header + '\n' : [header, row, row.replace('\t42\t', '\t43\t'), row.replace('acme/first', 'acme/last').replace('\t42\t', '\t44\t').replace('/first/', '/last/'), ''].join('\n')
+      const lastRow = row.replace('acme/first', 'acme/last').replace('\t42\t', '\t44\t').replace('/first/', '/last/')
+      const expected = scenario === 'page-error' ? [header, lastRow, ''].join('\n') : scenario !== 'alerts' ? header + '\n' : [header, row, row.replace('\t42\t', '\t43\t'), lastRow, ''].join('\n')
       assert.equal(output, expected)
       assert.ok(result.stdout.includes('Created dependabot-alerts-acme.tsv'), result.stdout)
-      if (scenario === 'alerts') {
+      if (scenario === 'alerts' || scenario === 'page-error') {
+        if (scenario === 'page-error') assert.ok(result.stderr.includes('Cannot read alerts for acme/first. Skipping.'), result.stderr)
         assert.ok(result.stderr.includes('Cannot read alerts for acme/denied. Skipping.'), result.stderr)
         assert.equal(requests.length, 5)
       } else if (scenario === 'empty') {
