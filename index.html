@@ -9,29 +9,29 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="shell">
-    <header>
-      <div class="brand">
-        <div class="mark" aria-hidden="true">DD</div>
-        <div>
-          <h1>DependaDash</h1>
-          <p class="subtitle">Dependabot alerts across your repositories.</p>
-          <p class="affiliation">Independent project. Not affiliated with GitHub.</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <label class="theme-control" for="themeSelect">Theme
-          <select class="control" id="themeSelect">
-            <option value="system">System</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </label>
-        <button class="btn" id="demoBtn" type="button">View demo</button>
-        <button class="btn" id="resetBtn" type="button" disabled>Analyze another account</button>
-      </div>
-    </header>
+  <header class="site-header">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">DD</div>
+      <h1>DependaDash</h1>
+    </div>
+    <div class="header-actions">
+      <label class="theme-control" for="themeSelect">Theme
+        <select class="control" id="themeSelect">
+          <option value="system">System</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </label>
+      <button class="btn" id="demoBtn" type="button">View demo</button>
+      <button class="btn" id="resetBtn" type="button" aria-label="Start a new dashboard or analyze another account" disabled>New dashboard</button>
+    </div>
+  </header>
+  <div class="page-intro">
+    <p class="subtitle">Dependabot alerts across your repositories.</p>
+    <p class="affiliation">Independent project. Not affiliated with GitHub.</p>
+  </div>
 
+  <div class="shell">
     <section class="grid setup" id="setup">
       <div class="panel">
         <div class="panel-body">
