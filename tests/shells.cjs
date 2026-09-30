@@ -111,7 +111,8 @@ async function main() {
         const bash = process.env.GIT_BASH || path.join(process.env.ProgramFiles, 'Git', 'bin', 'bash.exe')
         result = await execute(bash, ['--noprofile', '--norc', file.replace(/\\/g, '/')], { cwd, env })
       } else {
-        result = await execute(shell === 'git-bash' ? 'bash' : shell, [file], { cwd, env })
+        const runtime = shell === 'git-bash' ? 'bash' : shell === 'zsh' && process.platform === 'darwin' ? '/bin/zsh' : shell
+        result = await execute(runtime, [file], { cwd, env })
       }
       assert.equal(result.code, 0, result.stderr)
       const output = fs.readFileSync(path.join(cwd, 'dependabot-alerts-acme.tsv'), 'utf8').replace(/\r\n/g, '\n')

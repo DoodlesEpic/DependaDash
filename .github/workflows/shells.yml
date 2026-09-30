@@ -31,6 +31,16 @@ jobs:
           PS_LEGACY: '1'
         run: node tests/shells.cjs powershell
 
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate generated command in macOS Zsh
+        run: node tests/shells.cjs zsh
+
   windows:
     runs-on: windows-latest
     strategy:

@@ -8,4 +8,4 @@ The tests generate the same command shown in the dashboard and run it in a tempo
 
 Checks cover multiple repositories, pagination, denied alert access, empty accounts, missing optional fields, and UTF-8 text containing quotes, backslashes, tabs, and line breaks. Output must match the expected TSV exactly.
 
-The GitHub Action runs Bash, fish, Zsh, and PowerShell on Linux, plus Windows PowerShell 5.1, PowerShell, CMD, and Git Bash on Windows. Local container checks can run the same Node command after installing the required tools. CMD can also run under Wine with `TEST_WINE=1`, `MOCK_GH_DIR` pointing to a compiled adapter, and `REAL_GH` pointing to the Windows GitHub CLI executable.
+The GitHub Action runs Bash, fish, Zsh, and PowerShell on Linux, plus Windows PowerShell 5.1, PowerShell, CMD, and Git Bash on Windows. A macOS job tests Zsh, its default shell. Local container checks can run the same Node command after installing the required tools. CMD can also run under Wine with `TEST_WINE=1`, `MOCK_GH_DIR` pointing to a compiled adapter, and `REAL_GH` pointing to the Windows GitHub CLI executable.
