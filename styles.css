@@ -260,7 +260,7 @@ summary { cursor: pointer; color: var(--link); }
 .tab.active { color: var(--text); border-bottom-color: var(--tab-accent); }
 
 .table-wrap { overflow: auto; max-height: 65vh; }
-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1100px; overflow-wrap: normal; }
+table { table-layout: fixed; border-collapse: separate; border-spacing: 0; overflow-wrap: anywhere; }
 th {
   position: sticky;
   top: 0;
@@ -368,3 +368,12 @@ tr:hover td { background: rgba(110, 118, 129, .055); }
   .advisory .count { text-align: left; }
   .identity { align-items: flex-start; flex-direction: column; }
 }
+
+.table-options { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.column-menu { position: relative; margin: 0; }
+.column-menu summary { color: var(--text); }
+.column-menu fieldset { position: absolute; top: 100%; left: 0; z-index: 3; min-width: 200px; margin: 4px 0 0; padding: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow); }
+.column-menu label { display: flex; align-items: center; gap: 8px; min-height: 32px; }
+.column-menu input { accent-color: var(--link); }
+.column-resize { position: absolute; right: 0; top: 0; width: 12px; height: 100%; border: 0; border-right: 2px solid var(--border); background: transparent; cursor: col-resize; touch-action: none; }
+.column-resize:hover, .column-resize:focus-visible { border-right-color: var(--link); background: var(--button-hover); outline: 2px solid var(--link); outline-offset: -2px; }

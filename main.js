@@ -249,6 +249,7 @@ function renderAlerts() {
     </tr>`
   }).join('')
 
+  updateColumns()
   elements.alertsEmpty.hidden = filtered.length > 0
 }
 
@@ -439,3 +440,69 @@ elements.export.addEventListener('click', exportCsv)
 $('#demoBtn').addEventListener('click', loadDemo)
 
 updateShells()
+
+const tableColumns = [...$('#alertsTable').querySelectorAll('th')].map((header, index) => ({
+  header,
+  label: header.textContent,
+  width: [100, 200, 160, 220, 140, 110, 140, 360, 80][index],
+  visible: true
+}))
+
+function updateColumns() {
+  $('#alertsTable').style.width = `${tableColumns.reduce((total, column) => total + (column.visible ? column.width : 0), 0)}px`
+  tableColumns.forEach((column, index) => {
+    column.col.hidden = !column.visible
+    column.col.style.width = `${column.width}px`
+    column.header.hidden = !column.visible
+    column.handle.setAttribute('aria-valuenow', column.width)
+    column.checkbox.disabled = column.visible && tableColumns.filter(item => item.visible).length === 1
+    for (const row of elements.body.rows) row.cells[index].hidden = !column.visible
+  })
+}
+
+for (const column of tableColumns) {
+  column.col = document.createElement('col')
+  $('#alertColumns').append(column.col)
+  const label = document.createElement('label')
+  column.checkbox = document.createElement('input')
+  column.checkbox.type = 'checkbox'
+  column.checkbox.checked = true
+  column.checkbox.addEventListener('change', () => {
+    column.visible = column.checkbox.checked
+    updateColumns()
+  })
+  label.append(column.checkbox, column.label)
+  $('#columnOptions').append(label)
+
+  column.handle = document.createElement('button')
+  column.handle.type = 'button'
+  column.handle.className = 'column-resize'
+  column.handle.setAttribute('role', 'separator')
+  column.handle.setAttribute('aria-orientation', 'vertical')
+  column.handle.setAttribute('aria-label', `Resize ${column.label} column`)
+  column.handle.setAttribute('aria-valuemin', '64')
+  column.handle.setAttribute('aria-valuemax', '800')
+  column.header.append(column.handle)
+  const resize = width => {
+    column.width = Math.max(64, Math.min(800, width))
+    updateColumns()
+  }
+  column.handle.addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    resize(event.key === 'Home' ? 64 : event.key === 'End' ? 800 : column.width + (event.key === 'ArrowRight' ? 16 : -16))
+  })
+  let drag = null
+  column.handle.addEventListener('pointerdown', event => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    column.handle.focus()
+    column.handle.setPointerCapture(event.pointerId)
+    drag = { x: event.clientX, width: column.width }
+  })
+  column.handle.addEventListener('pointermove', event => {
+    if (drag) resize(drag.width + event.clientX - drag.x)
+  })
+  column.handle.addEventListener('lostpointercapture', () => { drag = null })
+}
+updateColumns()
