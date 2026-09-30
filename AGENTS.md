@@ -14,6 +14,16 @@ Good examples:
 
 Do not use forms such as `feat(ui): ...`.
 
+## Releases
+
+Every release must have its own annotated SemVer tag in `vMAJOR.MINOR.PATCH` format, starting with `v0.1.0`. Use a patch version for fixes, a minor version for new features, and a major version for breaking changes. While the major version is zero, use minor versions for breaking changes. Do not reuse or move published tags.
+
+Before releasing, review the changes, run the relevant checks, and commit all release files. Push `main` to all configured remotes before pushing the tag.
+
+For example, create the first release with `git tag -a v0.1.0 -m "Release v0.1.0"`. For each remote listed by `git remote`, run `git push <remote> main` followed by `git push <remote> v0.1.0`. Replace the version for later releases.
+
+The GitHub workflow in `.github/workflows/release.yml` creates a release when a version tag is pushed. Wait for the workflow to succeed, then suggest notes describing the changes and ask the user for the final release notes. Replace the generated notes with the user's text using `gh release edit <tag> --repo DoodlesEpic/DependaDash --notes-file <file>`. Preserve their wording and keep release notes out of README.md.
+
 ## Language
 
 Write all source code, comments, interface copy, documentation, commit messages, and new file content in English.
