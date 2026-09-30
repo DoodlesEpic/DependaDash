@@ -168,8 +168,16 @@
         </div>
 
         <div id="alertsView">
+          <div class="table-options">
+            <details class="column-menu">
+              <summary class="btn">Columns</summary>
+              <fieldset id="columnOptions"><legend>Visible columns</legend></fieldset>
+            </details>
+            <span class="muted">Drag column edges to resize, or focus an edge and use the arrow keys.</span>
+          </div>
           <div class="table-wrap" tabindex="0" role="region" aria-label="Alerts table, scroll to see all columns">
-            <table>
+            <table id="alertsTable">
+              <colgroup id="alertColumns"></colgroup>
               <thead>
                 <tr>
                   <th>Severity</th>
