@@ -10,6 +10,7 @@ const elements = {
   owner: $('#ownerInput'),
   ownerStatus: $('#ownerStatus'),
   shell: $('#shellSelect'),
+  shellHint: $('#shellHint'),
   command: $('#command'),
   copy: $('#copyBtn'),
   dashboard: $('#dashboard'),
@@ -55,6 +56,7 @@ function safeSlug(value) {
 }
 
 function updateOwner() {
+  elements.shellHint.hidden = elements.shell.value !== 'cmd'
   const owner = elements.owner.value.trim()
 
   if (!owner) {

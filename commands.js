@@ -5,6 +5,7 @@ function alertQuery(repository) {
 }
 
 function makeCommand(owner, shell = 'bash') {
+  if (shell === 'cmd') return makeCmdCommand(owner)
   if (shell === 'powershell') return makePowerShellCommand(owner)
   if (shell === 'fish') return makeFishCommand(owner)
   if (shell !== 'bash' && shell !== 'zsh') throw new Error('Unsupported shell')
@@ -85,4 +86,20 @@ try {
 }
 
 Write-Output "Created dependabot-alerts-${owner}.tsv"`
+}
+
+function makeCmdCommand(owner) {
+  return `@echo off
+setlocal
+set "OWNER=${owner}"
+set "OUT=dependabot-alerts-${owner}.tsv"
+
+> "%OUT%" echo ${alertHeader}
+for /f "delims=" %%R in ('gh repo list "%OWNER%" --limit 10000 --json nameWithOwner --jq ".[].nameWithOwner"') do (
+  echo Reading %%R... 1>&2
+  gh api --paginate -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/%%R/dependabot/alerts?state=open&per_page=100" --jq "${alertQuery('%%R').replace(/"/g, '\\"')}" >> "%OUT%" 2>nul || echo Cannot read alerts for %%R. Skipping. 1>&2
+)
+
+echo Created %OUT%
+endlocal`
 }
