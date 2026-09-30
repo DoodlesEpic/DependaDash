@@ -22,6 +22,7 @@ const elements = {
   command: $('#command'),
   copy: $('#copyBtn'),
   dashboard: $('#dashboard'),
+  setup: $('#setup'),
   body: $('#alertsBody'),
   alertsEmpty: $('#alertsEmpty'),
   advisoriesList: $('#advisoriesList'),
@@ -291,6 +292,7 @@ function renderAdvisories() {
 function loadData(data, label, ownerHint = '') {
   rows = data
   loadedOwnerHint = ownerHint
+  elements.setup.hidden = true
   elements.dashboard.classList.add('visible')
   elements.reset.disabled = false
   elements.fileMeta.textContent = `${label} · ${rows.length} alert${rows.length === 1 ? '' : 's'}`
@@ -424,11 +426,13 @@ elements.reset.addEventListener('click', () => {
   filtered = []
   loadedOwnerHint = ''
   elements.dashboard.classList.remove('visible')
+  elements.setup.hidden = false
   elements.fileMeta.textContent = ''
   $('#fileInput').value = ''
   elements.reset.disabled = true
   elements.search.value = ''
-  toast('Data cleared')
+  elements.owner.focus()
+  toast('Ready to analyze another account')
 })
 
 elements.export.addEventListener('click', exportCsv)
