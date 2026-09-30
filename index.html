@@ -56,6 +56,28 @@
             </div>
           </div>
 
+          <div class="command-selectors">
+            <label for="osSelect">
+              Operating system
+              <select class="control" id="osSelect">
+                <option value="linux">Linux</option>
+                <option value="macos">macOS</option>
+                <option value="windows">Windows</option>
+              </select>
+            </label>
+            <label for="shellSelect">
+              Shell
+              <select class="control" id="shellSelect">
+                <option value="bash">Bash</option>
+                <option value="fish">fish</option>
+                <option value="zsh">Zsh</option>
+                <option value="powershell">PowerShell</option>
+              </select>
+            </label>
+          </div>
+
+          <p id="shellHint" hidden>Save the command as a .cmd file, then run it in Command Prompt.</p>
+
           <div class="code-wrap">
             <pre id="command"><code># Enter a GitHub owner above.</code></pre>
             <button class="btn copy-button" id="copyBtn" type="button" disabled>Copy</button>
@@ -68,7 +90,7 @@
           <details>
             <summary>First time using GitHub CLI?</summary>
             <div class="notice">
-              Run <code>gh auth login</code> and complete authentication. DependaDash never asks for or stores your GitHub token.
+              Install GitHub CLI, then run <code>gh auth login</code> and complete authentication. All shell versions use its built-in JSON filtering and do not require a separate <code>jq</code> installation. DependaDash never asks for or stores your GitHub token.
             </div>
           </details>
         </div>
@@ -185,6 +207,7 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="commands.js" defer></script>
   <script src="main.js" defer></script>
 </body>
 </html>
