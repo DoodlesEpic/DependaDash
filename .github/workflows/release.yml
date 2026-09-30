@@ -16,6 +16,10 @@ jobs:
       GH_REPO: ${{ github.repository }}
       TAG: ${{ github.ref_name }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Validate version tag
         shell: bash
         run: |
@@ -23,6 +27,15 @@ jobs:
             echo "Expected a version tag in vMAJOR.MINOR.PATCH format."
             exit 1
           fi
+          test "$(git cat-file -t "refs/tags/$TAG")" = tag
+          git merge-base --is-ancestor HEAD origin/main
+          node <<'NODE'
+          const assert = require('node:assert/strict')
+          const fs = require('node:fs')
+          const html = fs.readFileSync('index.html', 'utf8')
+          const version = html.match(/<span class="version" aria-label="Version">(v\d+\.\d+\.\d+)<\/span>/)
+          assert.equal(version?.[1], process.env.TAG, 'The interface version must match the release tag')
+          NODE
 
       - name: Create GitHub release
         shell: bash
