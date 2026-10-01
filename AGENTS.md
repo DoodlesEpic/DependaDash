@@ -15,6 +15,7 @@ Good examples:
 Do not use forms such as `feat(ui): ...`.
 
 Create commits on a separate branch and merge them into `main` through a pull request.
+Use merge commits for pull requests. Do not squash commits.
 
 ## Issues and pull requests
 
