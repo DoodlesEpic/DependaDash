@@ -15,6 +15,11 @@ Good examples:
 Do not use forms such as `feat(ui): ...`.
 
 Create commits on a separate branch and merge them into `main` through a pull request.
+Use merge commits for pull requests. Do not squash commits.
+
+## Issues and pull requests
+
+Apply relevant GitHub labels to every issue and pull request you create or work on. Assign them to the person operating the AI agent, using their authenticated GitHub account unless they specify another account.
 
 ## Releases
 

@@ -32,7 +32,7 @@
     <p class="affiliation">Independent project. Not affiliated with GitHub.</p>
   </div>
 
-  <div class="shell">
+  <main class="shell">
     <section class="grid setup" id="setup">
       <div class="panel">
         <div class="panel-body">
@@ -127,7 +127,7 @@
       </div>
     </section>
 
-    <main class="dashboard" id="dashboard">
+    <section class="dashboard" id="dashboard" aria-label="Dependabot dashboard">
       <section class="dashboard-summary" aria-label="Dashboard summary">
         <div class="identity">
           <span>Loaded owner: <strong id="loadedOwner">-</strong></span>
@@ -210,13 +210,13 @@
           <span>Data stays in this browser tab.</span>
         </div>
       </section>
-    </main>
+    </section>
 
     <details class="footer-note">
       <summary>How DependaDash works</summary>
       <p>Browsers cannot execute <code>gh</code> directly. DependaDash generates the collection command and then visualizes the TSV it produces.</p>
     </details>
-  </div>
+  </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="commands.js" defer></script>
