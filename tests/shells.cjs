@@ -25,16 +25,16 @@ if (!process.env.MOCK_GH_DIR) {
 const context = vm.createContext({})
 vm.runInContext(fs.readFileSync(path.join(root, 'commands.js'), 'utf8'), context)
 const command = vm.runInContext(`makeCommand('acme', '${generatedShell}')`, context)
-const header = 'repository\talert_number\tseverity\tecosystem\tpackage\tghsa\tcve\tvulnerable_range\tpatched_version\tscope\trelationship\tmanifest_path\tsummary\thtml_url\tcreated_at'
+const header = 'repository\talert_number\tseverity\tecosystem\tpackage\tghsa\tcve\tvulnerable_range\tpatched_version\tscope\trelationship\tmanifest_path\tsummary\thtml_url\tcreated_at\tpublished_at'
 const fixture = {
   number: 42,
-  security_advisory: { severity: 'high', ghsa_id: 'GHSA-test-0001', cve_id: null, summary: 'Café 日本語\tquote " and \\ slash\nnext line\rreturn' },
+  security_advisory: { published_at: '2026-08-20T12:00:00Z', severity: 'high', ghsa_id: 'GHSA-test-0001', cve_id: null, summary: 'Café 日本語\tquote " and \\ slash\nnext line\rreturn' },
   dependency: { package: { ecosystem: 'npm', name: '@acme/example' }, scope: null, relationship: 'direct', manifest_path: 'package-lock.json' },
   security_vulnerability: { vulnerable_version_range: '< 2.0', first_patched_version: null },
   html_url: 'https://github.com/acme/first/security/dependabot/42', created_at: '2026-09-01T00:00:00Z'
 }
 const escape = value => String(value ?? '').replace(/\\/g, '\\\\').replace(/\t/g, '\\t').replace(/\n/g, '\\n').replace(/\r/g, '\\r')
-const row = [ 'acme/first', '42', 'high', 'npm', '@acme/example', 'GHSA-test-0001', '', '< 2.0', '', '', 'direct', 'package-lock.json', fixture.security_advisory.summary, fixture.html_url, fixture.created_at ].map(escape).join('\t')
+const row = [ 'acme/first', '42', 'high', 'npm', '@acme/example', 'GHSA-test-0001', '', '< 2.0', '', '', 'direct', 'package-lock.json', fixture.security_advisory.summary, fixture.html_url, fixture.created_at, fixture.security_advisory.published_at ].map(escape).join('\t')
 let scenario
 let requests
 const server = http.createServer((req, res) => {
@@ -61,7 +61,7 @@ const server = http.createServer((req, res) => {
     res.statusCode = 403
     res.end('{"message":"Forbidden on the second page"}')
   } else if (req.url.includes('/first/')) {
-    res.end(JSON.stringify([{ ...fixture, number: 43 }]))
+    res.end(JSON.stringify([{ ...fixture, number: 43, security_advisory: { ...fixture.security_advisory, published_at: null } }]))
   } else if (req.url.includes('/last/')) {
     res.end(JSON.stringify([{ ...fixture, number: 44, html_url: fixture.html_url.replace('/first/', '/last/') }]))
   } else {
@@ -117,7 +117,7 @@ async function main() {
       assert.equal(result.code, 0, result.stderr)
       const output = fs.readFileSync(path.join(cwd, 'dependabot-alerts-acme.tsv'), 'utf8').replace(/\r\n/g, '\n')
       const lastRow = row.replace('acme/first', 'acme/last').replace('\t42\t', '\t44\t').replace('/first/', '/last/')
-      const expected = scenario === 'page-error' ? [header, lastRow, ''].join('\n') : scenario !== 'alerts' ? header + '\n' : [header, row, row.replace('\t42\t', '\t43\t'), lastRow, ''].join('\n')
+      const expected = scenario === 'page-error' ? [header, lastRow, ''].join('\n') : scenario !== 'alerts' ? header + '\n' : [header, row, row.replace('\t42\t', '\t43\t').replace(fixture.security_advisory.published_at, ''), lastRow, ''].join('\n')
       assert.equal(output, expected)
       assert.ok(result.stdout.includes('Created dependabot-alerts-acme.tsv'), result.stdout)
       if (scenario === 'alerts' || scenario === 'page-error') {

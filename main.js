@@ -40,6 +40,7 @@ const elements = {
   severity: $('#severityFilter'),
   repo: $('#repoFilter'),
   ecosystem: $('#ecosystemFilter'),
+  sort: $('#sortOrder'),
   total: $('#totalCount'),
   critical: $('#criticalCount'),
   high: $('#highCount'),
@@ -198,6 +199,23 @@ function updateCards() {
   elements.loadedRepos.textContent = `${repositoryCount} affected repositor${repositoryCount === 1 ? 'y' : 'ies'}`
 }
 
+function compareDates(a, b) {
+  const [field, direction] = elements.sort.value.split(':')
+  if (field === 'severity') return 0
+  const aDate = Date.parse(a[field])
+  const bDate = Date.parse(b[field])
+  if (!Number.isFinite(aDate)) return Number.isFinite(bDate) ? 1 : 0
+  if (!Number.isFinite(bDate)) return -1
+  return direction === 'asc' ? aDate - bDate : bDate - aDate
+}
+
+function dateHtml(value) {
+  const date = new Date(value || NaN)
+  if (!Number.isFinite(date.getTime())) return 'Not available'
+  const timestamp = date.toISOString()
+  return `<time datetime="${timestamp}" title="${timestamp}">${timestamp.slice(0, 10)}</time>`
+}
+
 function render() {
   const query = elements.search.value.trim().toLowerCase()
 
@@ -222,6 +240,7 @@ function render() {
 
     return true
   }).sort((a, b) =>
+    compareDates(a, b) ||
     (severityRank[a.severity] ?? 99) - (severityRank[b.severity] ?? 99) ||
     a.repository.localeCompare(b.repository) ||
     a.package.localeCompare(b.package)
@@ -255,12 +274,13 @@ function renderAlerts() {
       <td>
         <div class="summary">${escapeHtml(row.summary || '-')}</div>
         <div class="advisory-ids">${advisoryLink}<span>${escapeHtml(row.cve || '')}</span></div>
+        <div class="tiny">Published: ${dateHtml(row.published_at)}</div>
       </td>
       <td>
         <div><span class="tiny">Affected:</span> <span class="version">${escapeHtml(row.vulnerable_range || '-')}</span></div>
         <div><span class="tiny">Fixed:</span> ${fix}</div>
       </td>
-      <td>${alertLink}</td>
+      <td>${alertLink}<div class="tiny">Created: ${dateHtml(row.created_at)}</div></td>
     </tr>`
   }).join('')
 
@@ -280,7 +300,7 @@ function renderAdvisories() {
   const items = [...groups.entries()].sort((a, b) => {
     const aSeverity = Math.min(...a[1].map(row => severityRank[row.severity] ?? 99))
     const bSeverity = Math.min(...b[1].map(row => severityRank[row.severity] ?? 99))
-    return aSeverity - bSeverity || b[1].length - a[1].length
+    return compareDates(a[1][0], b[1][0]) || aSeverity - bSeverity || b[1].length - a[1].length
   })
 
   elements.advisoriesList.innerHTML = items.map(([key, group]) => {
@@ -296,6 +316,7 @@ function renderAdvisories() {
       <div>
         <h3>${keyHtml} · ${escapeHtml(packages.join(', '))}</h3>
         <div class="muted">${escapeHtml(first.summary || '')}</div>
+        <div class="tiny">Published: ${dateHtml(first.published_at)}</div>
         <div class="repo-chips">${repositories.map(repository => `<span class="chip">${escapeHtml(repository)}</span>`).join('')}</div>
       </div>
       <div class="count">${group.length}<small>alert${group.length === 1 ? '' : 's'} in ${repositories.length} repo${repositories.length === 1 ? '' : 's'}</small></div>
@@ -354,7 +375,8 @@ function exportCsv() {
     'manifest_path',
     'summary',
     'html_url',
-    'created_at'
+    'created_at',
+    'published_at'
   ]
   const csvCell = value => `"${String(value ?? '').replace(/"/g, '""')}"`
   const csv = [columns.join(','), ...filtered.map(row => columns.map(column => csvCell(row[column])).join(','))].join('\n')
@@ -370,11 +392,11 @@ function exportCsv() {
 
 function loadDemo() {
   const demo = [
-    { repository: 'acme/api', alert_number: '12', severity: 'critical', ecosystem: 'npm', package: 'example-lib', ghsa: 'GHSA-demo-0001', cve: 'CVE-2026-DEMO1', vulnerable_range: '< 4.2.1', patched_version: '4.2.1', scope: 'runtime', relationship: 'direct', manifest_path: 'package-lock.json', summary: 'Fictional data used to demonstrate the interface.', html_url: '#', created_at: '2026-09-10T12:00:00Z' },
-    { repository: 'acme/web', alert_number: '7', severity: 'high', ecosystem: 'npm', package: 'sample-http', ghsa: 'GHSA-demo-0002', cve: 'CVE-2026-DEMO2', vulnerable_range: '>= 2.0, < 2.4.8', patched_version: '2.4.8', scope: 'runtime', relationship: 'transitive', manifest_path: 'package-lock.json', summary: 'Fictional transitive dependency vulnerability.', html_url: '#', created_at: '2026-09-09T11:00:00Z' },
-    { repository: 'acme/worker', alert_number: '3', severity: 'high', ecosystem: 'pip', package: 'sample-http', ghsa: 'GHSA-demo-0002', cve: 'CVE-2026-DEMO2', vulnerable_range: '< 2.4.8', patched_version: '2.4.8', scope: 'runtime', relationship: 'direct', manifest_path: 'requirements.txt', summary: 'The same fictional advisory affecting another repository.', html_url: '#', created_at: '2026-09-09T11:00:00Z' },
-    { repository: 'acme/tooling', alert_number: '2', severity: 'medium', ecosystem: 'npm', package: 'demo-parser', ghsa: 'GHSA-demo-0003', cve: '', vulnerable_range: '<= 1.8.0', patched_version: '', scope: 'development', relationship: 'direct', manifest_path: 'package-lock.json', summary: 'Fictional example without a published fix.', html_url: '#', created_at: '2026-09-08T10:00:00Z' },
-    { repository: 'acme/site', alert_number: '1', severity: 'low', ecosystem: 'github-actions', package: 'actions/example', ghsa: 'GHSA-demo-0004', cve: '', vulnerable_range: '< 3.0.0', patched_version: '3.0.0', scope: '', relationship: 'direct', manifest_path: '.github/workflows/ci.yml', summary: 'Fictional low severity example.', html_url: '#', created_at: '2026-09-07T10:00:00Z' }
+    { repository: 'acme/api', alert_number: '12', severity: 'critical', ecosystem: 'npm', package: 'example-lib', ghsa: 'GHSA-demo-0001', cve: 'CVE-2026-DEMO1', vulnerable_range: '< 4.2.1', patched_version: '4.2.1', scope: 'runtime', relationship: 'direct', manifest_path: 'package-lock.json', summary: 'Fictional data used to demonstrate the interface.', html_url: '#', created_at: '2026-09-10T12:00:00Z', published_at: '2026-09-01T08:00:00Z' },
+    { repository: 'acme/web', alert_number: '7', severity: 'high', ecosystem: 'npm', package: 'sample-http', ghsa: 'GHSA-demo-0002', cve: 'CVE-2026-DEMO2', vulnerable_range: '>= 2.0, < 2.4.8', patched_version: '2.4.8', scope: 'runtime', relationship: 'transitive', manifest_path: 'package-lock.json', summary: 'Fictional transitive dependency vulnerability.', html_url: '#', created_at: '2026-09-09T11:00:00Z', published_at: '2026-08-15T09:00:00Z' },
+    { repository: 'acme/worker', alert_number: '3', severity: 'high', ecosystem: 'pip', package: 'sample-http', ghsa: 'GHSA-demo-0002', cve: 'CVE-2026-DEMO2', vulnerable_range: '< 2.4.8', patched_version: '2.4.8', scope: 'runtime', relationship: 'direct', manifest_path: 'requirements.txt', summary: 'The same fictional advisory affecting another repository.', html_url: '#', created_at: '2026-09-09T11:00:00Z', published_at: '2026-08-15T09:00:00Z' },
+    { repository: 'acme/tooling', alert_number: '2', severity: 'medium', ecosystem: 'npm', package: 'demo-parser', ghsa: 'GHSA-demo-0003', cve: '', vulnerable_range: '<= 1.8.0', patched_version: '', scope: 'development', relationship: 'direct', manifest_path: 'package-lock.json', summary: 'Fictional example without a published fix.', html_url: '#', created_at: '2026-09-08T10:00:00Z', published_at: '2026-09-05T10:00:00Z' },
+    { repository: 'acme/site', alert_number: '1', severity: 'low', ecosystem: 'github-actions', package: 'actions/example', ghsa: 'GHSA-demo-0004', cve: '', vulnerable_range: '< 3.0.0', patched_version: '3.0.0', scope: '', relationship: 'direct', manifest_path: '.github/workflows/ci.yml', summary: 'Fictional low severity example.', html_url: '#', created_at: '2026-09-07T10:00:00Z', published_at: '2026-07-20T12:00:00Z' }
   ]
 
   loadData(demo, 'Demo data', 'acme')
@@ -401,7 +423,7 @@ for (const eventName of ['dragleave', 'drop']) {
 }
 dropZone.addEventListener('drop', event => handleFile(event.dataTransfer.files[0]))
 
-for (const element of [elements.search, elements.severity, elements.repo, elements.ecosystem]) {
+for (const element of [elements.search, elements.severity, elements.repo, elements.ecosystem, elements.sort]) {
   element.addEventListener(element.tagName === 'INPUT' ? 'input' : 'change', render)
 }
 
@@ -448,6 +470,7 @@ elements.reset.addEventListener('click', () => {
   $('#fileInput').value = ''
   elements.reset.disabled = true
   elements.search.value = ''
+  elements.sort.value = 'severity'
   elements.owner.focus()
   toast('Ready to analyze another account')
 })
@@ -460,7 +483,7 @@ updateShells()
 const tableColumns = [...$('#alertsTable').querySelectorAll('th')].map((header, index) => ({
   header,
   label: header.textContent,
-  width: [96, 200, 190, 420, 160, 72][index],
+  width: [96, 200, 190, 420, 160, 150][index],
   visible: true
 }))
 

@@ -1,5 +1,7 @@
 # Shell command tests
 
+Open `tests/dashboard.html` through a local HTTP server to run the dashboard checks in a browser. The page reports whether date ordering, advisory grouping, missing dates, filtering, CSV export, reset, and older TSV files work.
+
 Run `node tests/shells.cjs bash` from the repository. Replace `bash` with `fish`, `zsh`, `powershell`, `windows-powershell`, `cmd`, or `git-bash` to test another shell. Install Node.js, GitHub CLI, and the shell being tested. Set `PS_LEGACY=1` to exercise legacy PowerShell argument handling.
 
 Windows tests run from a Visual Studio developer prompt so the runner can compile the native GitHub CLI adapter. Git Bash uses the Git for Windows installation under Program Files. Set `GIT_BASH` to use a different Bash executable.

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>DependaDash dashboard tests</title>
+<pre id="result">Running dashboard tests...</pre>
+<iframe src="../index.html" title="Dashboard under test" style="width: 100%; height: 700px"></iframe>
+<script>
+const result = document.querySelector('#result')
+document.querySelector('iframe').addEventListener('load', async event => {
+  try {
+    const app = event.target.contentWindow
+    const doc = app.document
+    const assert = (condition, message) => {
+      if (!condition) throw new Error(message)
+    }
+    const order = value => {
+      const select = doc.querySelector('#sortOrder')
+      select.value = value
+      select.dispatchEvent(new app.Event('change'))
+    }
+    const alertOrder = () => [...doc.querySelectorAll('#alertsBody .repo')].map(item => item.textContent).join(',')
+    const groupOrder = () => [...doc.querySelectorAll('#advisoriesList h3 a')].map(item => item.textContent).join(',')
+    const row = (name, ghsa, severity, created, published) => ({
+      repository: `acme/${name}`, package: 'example', ghsa, severity,
+      created_at: created, published_at: published, html_url: '#'
+    })
+    app.loadData([
+      row('old', 'GHSA-A', 'low', '2026-01-01T00:00:00Z', '2025-01-01T00:00:00Z'),
+      row('new', 'GHSA-A', 'low', '2026-03-01T01:00:00+01:00', '2025-01-01T00:00:00Z'),
+      row('middle', 'GHSA-B', 'high', '2026-02-01T00:00:00Z', '2025-02-01T00:00:00Z'),
+      row('missing', 'GHSA-C', 'critical', '', ''),
+      row('invalid', 'GHSA-D', 'medium', 'invalid', 'invalid'),
+      row('tie', 'GHSA-E', 'critical', '2026-02-01T00:00:00Z', '2025-02-01T00:00:00Z')
+    ], 'Test data')
+    assert(alertOrder() === 'acme/missing,acme/tie,acme/middle,acme/invalid,acme/new,acme/old', 'Default severity ordering')
+    order('created_at:asc')
+    assert(alertOrder() === 'acme/old,acme/tie,acme/middle,acme/new,acme/missing,acme/invalid', 'Oldest alerts, ties, and missing dates')
+    assert(groupOrder() === 'GHSA-A,GHSA-E,GHSA-B,GHSA-C,GHSA-D', 'Groups use the oldest matching alert')
+    order('created_at:desc')
+    assert(alertOrder() === 'acme/new,acme/tie,acme/middle,acme/old,acme/missing,acme/invalid', 'Newest alerts and timezone offsets')
+    assert(groupOrder() === 'GHSA-A,GHSA-E,GHSA-B,GHSA-C,GHSA-D', 'Groups use the newest matching alert')
+    order('published_at:asc')
+    assert(alertOrder() === 'acme/new,acme/old,acme/tie,acme/middle,acme/missing,acme/invalid', 'Oldest advisories')
+    order('published_at:desc')
+    assert(groupOrder() === 'GHSA-E,GHSA-B,GHSA-A,GHSA-C,GHSA-D', 'Newest advisories')
+    assert(doc.querySelectorAll('#alertsBody time').length === 8, 'Valid dates use time elements')
+    assert(doc.querySelector('#alertsBody').textContent.includes('Not available'), 'Missing dates are labeled')
+    const search = doc.querySelector('#search')
+    search.value = 'middle'
+    search.dispatchEvent(new app.Event('input'))
+    assert(alertOrder() === 'acme/middle' && groupOrder() === 'GHSA-B', 'Filters apply before ordering and grouping')
+    let exported
+    app.URL.createObjectURL = blob => { exported = blob; return 'blob:test' }
+    app.URL.revokeObjectURL = () => {}
+    app.HTMLAnchorElement.prototype.click = () => {}
+    doc.querySelector('#exportBtn').click()
+    const csv = await exported.text()
+    assert(csv.split('\n').length === 2 && csv.includes('created_at,published_at') && csv.includes('2025-02-01T00:00:00Z'), 'CSV exports filtered dates')
+    doc.querySelector('#resetBtn').click()
+    assert(doc.querySelector('#sortOrder').value === 'severity', 'Reset restores severity ordering')
+    const oldFile = 'repository\tseverity\tpackage\tghsa\thtml_url\tcreated_at\nacme/legacy\thigh\texample\tGHSA-old\t#\t2026-01-01T00:00:00Z\n'
+    app.loadData(app.parseTSV(oldFile), 'Old TSV')
+    order('published_at:asc')
+    assert(alertOrder() === 'acme/legacy', 'Older TSV files remain readable')
+    app.loadData([], 'Empty TSV')
+    assert(!doc.querySelector('#alertsEmpty').hidden && !doc.querySelector('#advisoriesEmpty').hidden, 'Empty reports remain usable')
+    result.textContent = 'PASS: date ordering, grouping, ties, missing dates, filters, CSV, reset, and legacy TSV files'
+  } catch (error) {
+    result.textContent = `FAIL: ${error.stack}`
+  }
+})
+</script>
+</html>

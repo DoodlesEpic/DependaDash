@@ -1,7 +1,7 @@
-const alertHeader = 'repository\talert_number\tseverity\tecosystem\tpackage\tghsa\tcve\tvulnerable_range\tpatched_version\tscope\trelationship\tmanifest_path\tsummary\thtml_url\tcreated_at'
+const alertHeader = 'repository\talert_number\tseverity\tecosystem\tpackage\tghsa\tcve\tvulnerable_range\tpatched_version\tscope\trelationship\tmanifest_path\tsummary\thtml_url\tcreated_at\tpublished_at'
 
 function alertQuery(repository) {
-  return `.[] | ["${repository}", (.number | tostring), .security_advisory.severity, .dependency.package.ecosystem, .dependency.package.name, .security_advisory.ghsa_id, (.security_advisory.cve_id // ""), .security_vulnerability.vulnerable_version_range, (.security_vulnerability.first_patched_version.identifier // ""), (.dependency.scope // ""), (.dependency.relationship // ""), (.dependency.manifest_path // ""), (.security_advisory.summary // ""), .html_url, .created_at] | @tsv`
+  return `.[] | ["${repository}", (.number | tostring), .security_advisory.severity, .dependency.package.ecosystem, .dependency.package.name, .security_advisory.ghsa_id, (.security_advisory.cve_id // ""), .security_vulnerability.vulnerable_version_range, (.security_vulnerability.first_patched_version.identifier // ""), (.dependency.scope // ""), (.dependency.relationship // ""), (.dependency.manifest_path // ""), (.security_advisory.summary // ""), .html_url, .created_at, (.security_advisory.published_at // "")] | @tsv`
 }
 
 function makeCommand(owner, shell = 'bash') {
