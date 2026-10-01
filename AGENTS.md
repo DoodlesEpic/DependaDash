@@ -16,6 +16,10 @@ Do not use forms such as `feat(ui): ...`.
 
 Create commits on a separate branch and merge them into `main` through a pull request.
 
+## Issues and pull requests
+
+Apply relevant GitHub labels to every issue and pull request you create or work on. Assign them to the person operating the AI agent, using their authenticated GitHub account unless they specify another account.
+
 ## Releases
 
 Every release must have its own annotated SemVer tag in `vMAJOR.MINOR.PATCH` format, starting with `v0.1.0`. Use a patch version for fixes, a minor version for new features, and a major version for breaking changes. While the major version is zero, use minor versions for breaking changes. Do not reuse or move published tags.
