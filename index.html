@@ -13,7 +13,7 @@
     <div class="brand">
       <div class="mark" aria-hidden="true">DD</div>
       <h1>DependaDash</h1>
-      <span class="version" aria-label="Version">v0.2.1</span>
+      <span class="version" aria-label="Version">v0.3.0</span>
     </div>
     <div class="header-actions">
       <label class="theme-control" for="themeSelect">Theme
@@ -170,7 +170,15 @@
           <select class="control" id="ecosystemFilter" aria-label="Filter by ecosystem">
             <option value="">All ecosystems</option>
           </select>
+          <select class="control" id="sortOrder" aria-label="Order alerts">
+            <option value="severity">Severity</option>
+            <option value="created_at:desc">Alert created: newest first</option>
+            <option value="created_at:asc">Alert created: oldest first</option>
+            <option value="published_at:desc">Advisory published: newest first</option>
+            <option value="published_at:asc">Advisory published: oldest first</option>
+          </select>
         </div>
+        <p class="sort-help tiny">Dates are shown in UTC. Missing dates sort last. Grouped alert ordering uses each group's newest or oldest matching alert.</p>
 
         <div id="alertsView">
           <div class="table-wrap" tabindex="0" role="region" aria-label="Alerts table, scroll to see all columns">

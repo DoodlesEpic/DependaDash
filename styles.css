@@ -251,12 +251,13 @@ summary { cursor: pointer; color: var(--link); }
 
 .toolbar {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) repeat(3, minmax(140px, .35fr));
+  grid-template-columns: minmax(200px, 1fr) repeat(3, minmax(120px, .35fr)) minmax(220px, .5fr);
   gap: 9px;
   padding: 12px;
   border-bottom: 1px solid var(--border);
 }
 .control { border-radius: 6px; padding: 8px 10px; }
+.sort-help { padding: 8px 12px; border-bottom: 1px solid var(--border); }
 .tabs { display: flex; flex-wrap: wrap; gap: 2px; }
 .tab {
   border: 0;
@@ -376,7 +377,7 @@ tr:hover td { background: rgba(110, 118, 129, .055); }
   .page-intro { padding: 16px; }
   .shell { padding: 16px; }
   .panel-body { padding: 14px; }
-  #ecosystemFilter { grid-column: 1 / -1; }
+  #ecosystemFilter, #sortOrder { grid-column: 1 / -1; }
   .toolbar .control, .results-header .btn { min-height: 44px; }
   .advisory { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .advisory .count { text-align: left; }
